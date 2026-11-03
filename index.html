@@ -19,6 +19,7 @@
         .tile-big .title { font-size: 20px; font-weight: bold; display: block; margin-bottom: 6px; }
         .tile-big .status { font-size: 14px; color: #444; background: #f0f2f5; padding: 4px 10px; border-radius: 8px; display: inline-block; }
         .sql { border-color: #1565c0; }
+        .niemiecki { border-color: #8a1c1c; }
     </style>
 </head>
 <body>
@@ -35,14 +36,25 @@
                 <div class="status" id="stan-sql">Lekcje z zadaniami</div>
             </div>
         </a>
+        <a href="Niemiecki/index.html" class="tile-big niemiecki">
+            <div class="icon">🇩🇪</div>
+            <div class="info">
+                <div class="title">Niemiecki</div>
+                <div class="status" id="stan-niem">Nagrania i zadania</div>
+            </div>
+        </a>
     </div>
 
     <script>
     (function () {
-        var p = null;
-        try { p = JSON.parse(localStorage.getItem('centrum_taty_sql_postep')); } catch (e) { p = null; }
-        var ile = Object.keys((p && p.lekcje) || {}).length, razem = (p && p.razem) || 0;
-        if (ile && razem) document.getElementById('stan-sql').textContent = ile >= razem ? 'Kurs ukończony' : 'Zrobione ' + ile + ' z ' + razem;
+        function pokaz(klucz, pole) {
+            var p = null;
+            try { p = JSON.parse(localStorage.getItem(klucz)); } catch (e) { p = null; }
+            var ile = Object.keys((p && p.lekcje) || {}).length, razem = (p && p.razem) || 0;
+            if (ile && razem) document.getElementById(pole).textContent = ile >= razem ? 'Kurs ukończony' : 'Zrobione ' + ile + ' z ' + razem;
+        }
+        pokaz('centrum_taty_sql_postep', 'stan-sql');
+        pokaz('centrum_taty_niem_postep', 'stan-niem');
         if ('serviceWorker' in navigator && location.protocol !== 'file:') {
             navigator.serviceWorker.register('sw.js').catch(function () { /* bez trybu offline strona nadal działa */ });
         }
