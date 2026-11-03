@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centrum Nauki Taty</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="ikona.svg" type="image/svg+xml">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px 16px 80px; text-align: center; }
+        h1 { color: #333; margin-bottom: 5px; font-size: 26px; }
+        p.subtitle { color: #5a6270; font-size: 15px; margin-top: 0; margin-bottom: 30px; }
+        h2 { color: #555; text-align: left; max-width: 800px; margin: 30px auto 15px; border-bottom: 2px solid #ddd; padding-bottom: 5px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .grid-priority { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 800px; margin: 0 auto; }
+        .tile-big { background: white; border-radius: 20px; padding: 20px; text-decoration: none; color: #333; box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: transform 0.2s; display: flex; align-items: center; justify-content: flex-start; min-height: 90px; border-left: 12px solid #ddd; position: relative; overflow: hidden; }
+        .tile-big:active { transform: scale(0.96); }
+        .tile-big .icon { font-size: 45px; margin-right: 20px; margin-left: 5px; }
+        .tile-big .info { text-align: left; }
+        .tile-big .title { font-size: 20px; font-weight: bold; display: block; margin-bottom: 6px; }
+        .tile-big .status { font-size: 14px; color: #444; background: #f0f2f5; padding: 4px 10px; border-radius: 8px; display: inline-block; }
+        .sql { border-color: #1565c0; }
+    </style>
+</head>
+<body>
+    <h1>🎓 Centrum Nauki Taty</h1>
+    <p class="subtitle">Kilkanaście minut dziennie</p>
+
+    <h2>📚 Kursy</h2>
+    <div class="grid-priority">
+        <!-- Nowy kurs: nowy katalog i kolejny kafelek w tym miejscu. -->
+        <a href="SQL/index.html" class="tile-big sql">
+            <div class="icon">🗄️</div>
+            <div class="info">
+                <div class="title">SQL</div>
+                <div class="status" id="stan-sql">Lekcje z zadaniami</div>
+            </div>
+        </a>
+    </div>
+
+    <script>
+    (function () {
+        var p = null;
+        try { p = JSON.parse(localStorage.getItem('centrum_taty_sql_postep')); } catch (e) { p = null; }
+        var ile = Object.keys((p && p.lekcje) || {}).length, razem = (p && p.razem) || 0;
+        if (ile && razem) document.getElementById('stan-sql').textContent = ile >= razem ? 'Kurs ukończony' : 'Zrobione ' + ile + ' z ' + razem;
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            navigator.serviceWorker.register('sw.js').catch(function () { /* bez trybu offline strona nadal działa */ });
+        }
+    })();
+    </script>
+</body>
+</html>
