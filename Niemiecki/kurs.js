@@ -9,7 +9,7 @@
     var p = null;
     try { p = JSON.parse(localStorage.getItem(KLUCZ)); } catch (e) { p = null; }
     p = p || {};
-    p.zadania = p.zadania || {}; p.lekcje = p.lekcje || {}; p.tekst = p.tekst || {};
+    p.zadania = p.zadania || {}; p.lekcje = p.lekcje || {}; p.tekst = p.tekst || {}; p.slowa = p.slowa || {};
     return p;
   }
   var stan = wczytaj();
@@ -92,6 +92,89 @@
     return box;
   }
 
+  // --- słówka: wymowa z głosu telefonu i powtórki w coraz dłuższych odstępach ---
+  var ODSTEPY = [1, 3, 7, 21, 60];
+  function dataZaDni(n) {
+    var d = new Date(); d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function wymow(t) {
+    if (!('speechSynthesis' in window)) return;
+    // same słowo: bez przypadka i końcówki liczby mnogiej
+    var u = new SpeechSynthesisUtterance(t.replace(/,.*$/, '').replace(/ \+ [A-Z]\.$/, '').replace(/ \(Pl\.\)$/, ''));
+    u.lang = 'de-DE'; u.rate = 0.9;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }
+  function przyciskWymowy(t) {
+    if (!('speechSynthesis' in window)) return null;
+    return el('button', { class: 'mow', type: 'button', text: '🔊', 'aria-label': 'Wymowa: ' + t, onclick: function (e) { e.stopPropagation(); wymow(t); } });
+  }
+  function slowkaLekcji(nr) { return (window.NiemSlowka || {})[nr] || []; }
+  function doPowtorki() {
+    var w = [], dzisiaj = dzis();
+    L.forEach(function (l) {
+      slowkaLekcji(l.nr).forEach(function (s) {
+        var st = stan.slowa[s.de];
+        if (st && st.t <= dzisiaj) w.push(s);
+      });
+    });
+    return w;
+  }
+  function ocen(s, umiem) {
+    var st = stan.slowa[s.de] || { b: 0 };
+    st.b = umiem ? Math.min((st.t ? st.b + 1 : 0), ODSTEPY.length - 1) : 0;
+    st.t = dataZaDni(ODSTEPY[st.b]);
+    stan.slowa[s.de] = st;
+    zapisz();
+  }
+  function kartaSlowek(l) {
+    var lista = slowkaLekcji(l.nr);
+    if (!lista.length) return null;
+    var nauczone = lista.filter(function (s) { return stan.slowa[s.de]; }).length;
+    var k = el('details', { class: 'karta', id: 'slowka' }, el('summary', { text: '📚 Słówka (' + lista.length + ')' + (nauczone ? ', przećwiczone: ' + nauczone : '') }));
+    k.appendChild(el('div', { class: 'przyciski', style: 'margin-bottom:8px' }, el('a', { class: 'btn g', href: '#slowka/' + l.nr, text: 'Ćwicz na fiszkach' })));
+    lista.forEach(function (s) {
+      k.appendChild(el('div', { class: 'slowo' }, el('div', {}, el('div', { class: 'haslo', text: s.de }), el('div', { text: s.pl }), el('div', { class: 'przyklad', text: s.ex })), przyciskWymowy(s.de)));
+    });
+    return k;
+  }
+  function widokFiszek(zestaw, tytul, powrot) {
+    var kolejka = zestaw.slice(), zrobione = 0, razem = zestaw.length, drugiRaz = {};
+    window.scrollTo(0, 0);
+    function pokaz() {
+      wyczysc(app);
+      app.appendChild(el('p', {}, el('a', { href: powrot, text: '← Wróć' })));
+      app.appendChild(el('h1', { text: tytul }));
+      if (!kolejka.length) {
+        app.appendChild(el('div', { class: 'msg ok', text: razem ? '✅ Koniec. Słówka wrócą w powtórce, gdy przyjdzie ich czas.' : 'Dziś nie ma nic do powtórzenia.' }));
+        app.appendChild(el('div', { class: 'przyciski' }, el('a', { class: 'btn g', href: powrot, text: 'Wróć' })));
+        return;
+      }
+      var s = kolejka[0];
+      var dol = el('div');
+      var karta = el('div', { class: 'karta fiszka' }, el('div', { class: 'mala', text: 'Zrobione ' + zrobione + ' z ' + razem }), el('div', { class: 'pol', text: s.pl }), dol);
+      dol.appendChild(el('div', { class: 'przyciski', style: 'margin-top:18px' }, el('button', { class: 'g', text: 'Pokaż po niemiecku', onclick: function () {
+        wyczysc(dol);
+        dol.appendChild(el('div', { class: 'haslo', text: s.de }));
+        dol.appendChild(el('div', { class: 'przyklad', text: s.ex }));
+        dol.appendChild(el('div', { class: 'przyciski' }, przyciskWymowy(s.de)));
+        dol.appendChild(el('div', { class: 'przyciski' },
+          el('button', { class: 'g', text: 'Umiem', onclick: function () {
+            if (!drugiRaz[s.de]) ocen(s, true);
+            kolejka.shift(); zrobione++; pokaz();
+          } }),
+          el('button', { text: 'Jeszcze nie', onclick: function () {
+            // wraca jeszcze w tej sesji, a w planie powtórek zaczyna od nowa
+            if (!drugiRaz[s.de]) ocen(s, false);
+            drugiRaz[s.de] = true;
+            kolejka.push(kolejka.shift()); pokaz();
+          } })));
+      } })));
+      app.appendChild(karta);
+    }
+    pokaz();
+  }
+
   // --- plan ---
   function widokPlanu() {
     wyczysc(app);
@@ -122,6 +205,9 @@
     k.appendChild(el('div', { class: 'mala', text: 'Zrobione: ' + ile + ' z ' + L.length }));
     app.appendChild(k);
 
+    var powtorka = doPowtorki().length;
+    if (powtorka) app.appendChild(el('div', { class: 'karta' }, el('h3', { text: '🔁 Słówka do powtórki: ' + powtorka }), el('p', { class: 'mala', text: 'Kilka minut na fiszkach, można też zamiast lekcji.' }), el('a', { class: 'btn g', href: '#slowka', text: 'Powtórz' })));
+
     B.forEach(function (blok, nrB) {
       app.appendChild(el('h2', { text: blok.nazwa }));
       app.appendChild(el('p', { class: 'mala', text: blok.opis }));
@@ -139,7 +225,7 @@
     if (ile) {
       app.appendChild(el('p', { class: 'mala', style: 'margin-top:28px' }, el('a', { href: '#', text: 'Wyzeruj postęp', onclick: function (e) {
         e.preventDefault();
-        if (confirm('Na pewno wyzerować cały postęp kursu?')) { stan = { zadania: {}, lekcje: {}, tekst: {} }; zapisz(); widokPlanu(); }
+        if (confirm('Na pewno wyzerować cały postęp kursu?')) { stan = { zadania: {}, lekcje: {}, tekst: {}, slowa: {} }; zapisz(); widokPlanu(); }
       } })));
     }
   }
@@ -238,6 +324,8 @@
     app.appendChild(el('p', { text: l.cel }));
     app.appendChild(odtwarzacz(l));
     app.appendChild(el('div', { class: 'karta', html: l.teoria }));
+    var slowka = kartaSlowek(l);
+    if (slowka) app.appendChild(slowka);
 
     var rozmowa = el('div');
     l.rozmowa.forEach(function (r) { rozmowa.appendChild(el('p', { class: 'replika' }, el('b', { text: (l.nazwy || NAZWY)[r[0]] + ': ' }), el('span', { text: r[1] }))); });
@@ -263,7 +351,11 @@
   }
   function trasa() {
     var m = /^#lekcja\/(\d+)$/.exec(location.hash);
-    if (m) widokLekcji(+m[1]); else widokPlanu();
+    var f = /^#slowka\/(\d+)$/.exec(location.hash);
+    if (m) widokLekcji(+m[1]);
+    else if (f) widokFiszek(slowkaLekcji(+f[1]), 'Słówka z lekcji ' + f[1], '#lekcja/' + f[1]);
+    else if (location.hash === '#slowka') widokFiszek(doPowtorki(), 'Powtórka słówek', '#');
+    else widokPlanu();
   }
   function uruchomKurs() {
     L = window.NiemLekcje; B = window.NiemBloki;
