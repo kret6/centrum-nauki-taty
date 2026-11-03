@@ -1,5 +1,5 @@
 // Tryb offline: pliki są od razu brane z pamięci urządzenia, a w tle odświeżane z sieci.
-var CACHE = 'centrum-taty-7e2abdd5015b';
+var CACHE = 'centrum-taty-38c973082f39';
 var PLIKI = ["./","./index.html","./Niemiecki/index.html","./Niemiecki/kurs.js","./Niemiecki/silnik.js","./Niemiecki/tresc.szyfr.js","./SQL/index.html","./SQL/kurs.js","./SQL/silnik.js","./SQL/tresc.szyfr.js","./SQL/vendor/LICENSE.sql.js.txt","./SQL/vendor/sql-wasm-binarka.js","./SQL/vendor/sql-wasm.js","./ikona.svg","./manifest.json","./SQL/","./Niemiecki/"];
 
 self.addEventListener('install', function (e) {
