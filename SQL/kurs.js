@@ -104,6 +104,41 @@
     return p;
   }
 
+  // --- audio: w wersji publicznej plik jest zaszyfrowany tym samym kluczem co lekcje ---
+  function adresAudio(l) { return 'audio/' + l.audio + (window.KursSzyfr ? '.mp3.szyfr' : '.mp3'); }
+  function zrodloAudio(l) {
+    if (!window.KursSzyfr) return Promise.resolve(adresAudio(l));
+    return fetch(adresAudio(l)).then(function (o) {
+      if (!o.ok) throw new Error('HTTP ' + o.status);
+      return o.arrayBuffer();
+    }).then(function (b) {
+      return crypto.subtle.importKey('raw', zBase64(czytajKlucz()), 'AES-GCM', false, ['decrypt']).then(function (ck) {
+        return crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(b, 0, 12) }, ck, new Uint8Array(b, 12));
+      });
+    }).then(function (mp3) { return URL.createObjectURL(new Blob([mp3], { type: 'audio/mpeg' })); });
+  }
+  function odtwarzacz(l) {
+    if (!l.audio) return null;
+    var box = el('div', { class: 'audio' });
+    var przycisk = el('button', { class: 'g', text: '🎧 Posłuchaj lekcji (ok. ' + l.audioMin + ' min)', onclick: function () {
+      przycisk.disabled = true; przycisk.textContent = '⏳ Przygotowuję nagranie…';
+      zrodloAudio(l).then(function (src) {
+        var a = el('audio', { controls: 'controls', src: src, preload: 'auto', 'aria-label': 'Nagranie lekcji ' + l.nr });
+        wyczysc(box); box.appendChild(a);
+        if ('mediaSession' in navigator && window.MediaMetadata) {
+          navigator.mediaSession.metadata = new MediaMetadata({ title: 'Lekcja ' + l.nr + '. ' + l.tytul, artist: 'Centrum Nauki Taty', album: 'Kurs SQL' });
+        }
+        var p = a.play();
+        if (p && p.catch) p.catch(function () { /* start ręczny z kontrolek */ });
+      }).catch(function () {
+        wyczysc(box);
+        box.appendChild(el('div', { class: 'msg zle', text: '❌ Nie mogę pobrać nagrania. Bez zasięgu działa tylko to, które było już odtwarzane lub przygotowane.' }));
+      });
+    } });
+    box.appendChild(przycisk);
+    return box;
+  }
+
   // --- plan kursu ---
   function widokPlanu() {
     wyczysc(app);
@@ -125,7 +160,10 @@
       k.appendChild(el('div', { class: 'mala', text: 'Dzisiaj, około 15 minut' }));
       k.appendChild(el('h3', { text: 'Lekcja ' + nast.nr + '. ' + nast.tytul }));
       k.appendChild(el('p', { text: nast.cel }));
-      k.appendChild(el('div', { class: 'przyciski' }, el('a', { class: 'btn g', href: '#lekcja/' + nast.nr, text: 'Zaczynam' })));
+      if (nast.audio) k.appendChild(odtwarzacz(nast));
+      k.appendChild(el('div', { class: 'przyciski' }, el('a', { class: 'btn' + (nast.audio ? '' : ' g'), href: '#lekcja/' + nast.nr, text: nast.audio ? 'Otwórz lekcję i zadania' : 'Zaczynam' })));
+      // nagranie na dziś trafia do pamięci telefonu, póki jest zasięg
+      if (nast.audio && window.KursSzyfr) fetch(adresAudio(nast)).catch(function () { /* spróbujemy przy odtwarzaniu */ });
     }
     k.appendChild(el('div', { class: 'pasek', role: 'img', 'aria-label': 'Postęp: ' + ile + ' z ' + L.length }, el('i', { style: 'width:' + Math.round(100 * ile / L.length) + '%' })));
     k.appendChild(el('div', { class: 'mala', text: 'Zrobione: ' + ile + ' z ' + L.length }));
@@ -251,6 +289,7 @@
     app.appendChild(el('div', { class: 'mala', text: 'Lekcja ' + l.nr + ' z ' + L.length + ' · ' + B[l.blok].nazwa }));
     app.appendChild(el('h1', { text: l.tytul }));
     app.appendChild(el('p', { text: l.cel }));
+    if (l.audio) app.appendChild(odtwarzacz(l));
     app.appendChild(el('div', { class: 'karta', html: l.teoria }));
 
     l.przyklady.forEach(function (p) {
