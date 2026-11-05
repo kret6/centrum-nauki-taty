@@ -20,6 +20,7 @@
         .tile-big .status { font-size: 14px; color: #444; background: #f0f2f5; padding: 4px 10px; border-radius: 8px; display: inline-block; }
         .sql { border-color: #1565c0; }
         .niemiecki { border-color: #8a1c1c; }
+        .iam { border-color: #0b5c5c; }
     </style>
 </head>
 <body>
@@ -43,6 +44,13 @@
                 <div class="status" id="stan-niem">Nagrania i zadania</div>
             </div>
         </a>
+        <a href="IAM/index.html" class="tile-big iam">
+            <div class="icon">🔑</div>
+            <div class="info">
+                <div class="title">IAM</div>
+                <div class="status" id="stan-iam">Lekcje i skrypty</div>
+            </div>
+        </a>
     </div>
 
     <script>
@@ -55,6 +63,7 @@
         }
         pokaz('centrum_taty_sql_postep', 'stan-sql');
         pokaz('centrum_taty_niem_postep', 'stan-niem');
+        pokaz('centrum_taty_iam_postep', 'stan-iam');
         if ('serviceWorker' in navigator && location.protocol !== 'file:') {
             navigator.serviceWorker.register('sw.js').catch(function () { /* bez trybu offline strona nadal działa */ });
         }
