@@ -1,6 +1,6 @@
 // Tryb offline: pliki są od razu brane z pamięci urządzenia, a w tle odświeżane z sieci.
-var CACHE = 'centrum-taty-e685c48c4f29';
-var PLIKI = ["./","./index.html","./IAM/index.html","./IAM/kurs.js","./IAM/silnik.js","./IAM/tresc.szyfr.js","./Niemiecki/index.html","./Niemiecki/kurs.js","./Niemiecki/silnik.js","./Niemiecki/tresc.szyfr.js","./SQL/index.html","./SQL/kurs.js","./SQL/silnik.js","./SQL/tresc.szyfr.js","./SQL/vendor/LICENSE.sql.js.txt","./SQL/vendor/sql-wasm-binarka.js","./SQL/vendor/sql-wasm.js","./ikona.svg","./manifest.json","./SQL/","./Niemiecki/","./IAM/"];
+var CACHE = 'centrum-taty-f8b473f49e0e';
+var PLIKI = ["./","./index.html","./BA/index.html","./BA/kurs.js","./BA/silnik.js","./BA/tresc.szyfr.js","./IAM/index.html","./IAM/kurs.js","./IAM/silnik.js","./IAM/tresc.szyfr.js","./Niemiecki/index.html","./Niemiecki/kurs.js","./Niemiecki/silnik.js","./Niemiecki/tresc.szyfr.js","./SQL/index.html","./SQL/kurs.js","./SQL/silnik.js","./SQL/tresc.szyfr.js","./SQL/vendor/LICENSE.sql.js.txt","./SQL/vendor/sql-wasm-binarka.js","./SQL/vendor/sql-wasm.js","./ikona.svg","./manifest.json","./SQL/","./Niemiecki/","./IAM/","./BA/"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) {

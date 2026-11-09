@@ -21,6 +21,7 @@
         .sql { border-color: #1565c0; }
         .niemiecki { border-color: #8a1c1c; }
         .iam { border-color: #0b5c5c; }
+        .ba { border-color: #5b3a8c; }
     </style>
 </head>
 <body>
@@ -51,6 +52,13 @@
                 <div class="status" id="stan-iam">Lekcje i skrypty</div>
             </div>
         </a>
+        <a href="BA/index.html" class="tile-big ba">
+            <div class="icon">📝</div>
+            <div class="info">
+                <div class="title">Analiza biznesowa</div>
+                <div class="status" id="stan-ba">User stories i use case</div>
+            </div>
+        </a>
     </div>
 
     <script>
@@ -64,6 +72,7 @@
         pokaz('centrum_taty_sql_postep', 'stan-sql');
         pokaz('centrum_taty_niem_postep', 'stan-niem');
         pokaz('centrum_taty_iam_postep', 'stan-iam');
+        pokaz('centrum_taty_ba_postep', 'stan-ba');
         if ('serviceWorker' in navigator && location.protocol !== 'file:') {
             navigator.serviceWorker.register('sw.js').catch(function () { /* bez trybu offline strona nadal działa */ });
         }
